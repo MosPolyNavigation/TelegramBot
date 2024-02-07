@@ -12,7 +12,7 @@ cursor = conn.cursor()
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton #ReplyKeyboardRemove
 
 
-TOKEN = '5895809940:AAENleKqlA8yA-9Tbh5j6VDIbnmCbPkHx80'
+TOKEN = '...'
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
