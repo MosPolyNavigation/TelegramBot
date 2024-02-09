@@ -16,7 +16,7 @@ import json
 conn = sqlite3.connect('my.db')
 cursor = conn.cursor()
 
-TOKEN = '6731829772:AAF-fGyjjw2MNcr2xn4YlH7bLR6uGOp17rA'
+TOKEN = '...'
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
