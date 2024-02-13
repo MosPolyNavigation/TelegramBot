@@ -1,10 +1,11 @@
 import logging
 
-from aiogram import Bot, types
-from aiogram.dispatcher import Dispatcher
-from aiogram.utils import executor
+from aiogram import Bot, Dispatcher, types, F, Router
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup,\
     KeyboardButton, PollAnswer, Poll, ReplyKeyboardRemove
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.strategy import FSMStrategy
+from aiogram.filters import Command
 
 from datetime import datetime, timedelta
 
@@ -16,9 +17,9 @@ import json
 conn = sqlite3.connect('my.db')
 cursor = conn.cursor()
 
-TOKEN = '...'
+TOKEN = '6959853578:AAG7DlllIQ5GynnPZrdfHgbKiqp1vyaixrE'
 bot = Bot(token=TOKEN)
-dp = Dispatcher(bot)
+basic_router = Router()
 
 async def on_startup(_):
     print('Бот вышел в онлайн')
@@ -38,20 +39,16 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS user_votes (
                 )''')
 
 #вызов, после нажатия старт, клавиатуры (кнопки - новый маршрут, библиотека карт) и программы ДОДа
-@dp.message_handler(commands=['start'])
+@basic_router.message(Command('start'))
 async def commands_start(message: types.Message):
     user_id = message.from_user.id
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    cursor.execute('INSERT INTO user_stat (user_id, timestamp) VALUES (?, ?)', (user_id, timestamp))
+    cursor.execute('INSERT INTO user_stat (user_id, timestamp) VALUES (?, ?)', (user_id, timestamp)) #TODO: db connections do not respond
     conn.commit()
-
-    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-
-    button_new_marshrut = KeyboardButton('Новый маршрут 📌')
-    keyboard.add(button_new_marshrut)
-
-    url_button = types.KeyboardButton(text='Библиотека карт 🗺')
-    keyboard.add(url_button)
+    keyboard = ReplyKeyboardMarkup([
+        [KeyboardButton('Новый маршрут 📌')],
+        [KeyboardButton(text='Библиотека карт 🗺')]
+    ], resize_keyboard=True)
 
     pdf_file = 'Программа Дня открытых дверей.pdf'
 
@@ -61,11 +58,10 @@ async def commands_start(message: types.Message):
     except FileNotFoundError:
         logging.error(f'Файл {pdf_file} не найден.')
         await message.answer('Файл не найден.')
-
     await message.answer('Чтобы продолжить, нажмите на кнопку «Новый маршрут», кнопка расположена внизу экрана.', reply_markup=keyboard)
 
 #обновление бота
-@dp.message_handler(commands=['restart'])
+@basic_router.message(Command('restart'))
 async def commands_start(message: types.Message):
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
 
@@ -78,7 +74,7 @@ async def commands_start(message: types.Message):
     await message.answer('Чтобы продолжить, нажми на кнопку «Новый маршрут», кнопка расположена внизу экрана.', reply_markup=keyboard)
 
 #команда для отправления ссылки на сайт библиотеки карт
-@dp.message_handler(lambda message: message.text == 'Библиотека карт 🗺')
+@basic_router.message(F.text == 'Библиотека карт 🗺')
 async def open_website(message: types.Message):
     user_id = message.from_user.id
     timestampurl = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -116,7 +112,7 @@ async def count_users_February(start_February, end_February):
 
 
 #команда для бота, чтобы увидеть общее количество новых пользователей за выбранный период времени
-@dp.message_handler(commands=['users'])
+@basic_router.message(Command('users'))
 async def get_users_stat(message: types.Message):
     start_time = '2023-01-01 00:00:00'  #начальное время
     end_time = '2024-12-31 23:59:59'  #конечное время
@@ -163,7 +159,7 @@ async def count_users_url_February(start_url_February, end_url_February):
     return users_url_February
 
 #команда для бота, чтобы увидеть общее количество пользователей за выбранный период времени (для библиотеки карт)
-@dp.message_handler(commands=['url'])
+@basic_router.message(Command('url'))
 async def get_users_url(message: types.Message):
     start_url = '2023-01-01 00:00:00'  #начальное время
     end_url = '2024-12-31 23:59:59'  #конечное время
@@ -212,7 +208,7 @@ async def send_poll():
 
 
 #получение результатов опроса
-@dp.message_handler(commands=['results'])
+@basic_router.message(Command('results'))
 async def results(message: types.Message):
     user_id = message.from_user.id
     if user_id in poll_results:
@@ -239,7 +235,7 @@ async def scheduler():
 
 
 #эта штучка нужна, если вдруг пользователь нажмёт в описании бота на данную команду (по факту делает то же самое, что и команда старт)
-@dp.message_handler(commands=['newroute'])
+@basic_router.message(Command('newroute'))
 async def commands_start(message: types.Message):
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
     button_new_marshrut = KeyboardButton('Новый маршрут 📌')
@@ -252,13 +248,13 @@ async def commands_start(message: types.Message):
 
 
 #вывод сообщения после нажатия на кнопку новый маршрут
-@dp.message_handler(lambda message: message.text == 'Новый маршрут 📌')
+@basic_router.message(F.text == 'Новый маршрут 📌')
 async def url_command(message : types.Message):
 	await message.answer('Выбери, что хочешь посетить:  👀', reply_markup=urlkb)
 
 
 #команда описания бота
-@dp.message_handler(commands=['description'])
+@basic_router.message(Command('description'))
 async def cmd_description(message: types.Message):
     description_file = f'descriptions_language_ru.txt'
     try:
@@ -272,26 +268,25 @@ async def cmd_description(message: types.Message):
 
 
 #создание инлайн кнопок для выбора мероприятия ДОДа
-urlkb = InlineKeyboardMarkup(row_width=1)
-urlButton1 = InlineKeyboardButton(text='Официальная часть', callback_data='v1')
-urlButton2 = InlineKeyboardButton(text='Мастер-классы', callback_data='v2')
-urlButton3 = InlineKeyboardButton(text='Приёмная комиссия', callback_data='v3')
-urlButton4 = InlineKeyboardButton(text='Выставка проектов', callback_data='v4')
-urlButton5 = InlineKeyboardButton(text='Выставочная зона', callback_data='v5')
-urlButton6 = InlineKeyboardButton(text='Бизнес-зона', callback_data='v6')
-urlButton7 = InlineKeyboardButton(text='Паблик-толк с\nИгорем Асановым', callback_data='v7')
-urlButton8 = InlineKeyboardButton(text='Несекретные материалы', callback_data='v8')
-urlButton9 = InlineKeyboardButton(text='Стенды информации', callback_data='v9')
-urlButton11 = InlineKeyboardButton(text='Викторины', callback_data='v11')
-urlButton12 = InlineKeyboardButton(text='Квест "Зачетка абитуриента"', callback_data='v12')
-urlButton13 = InlineKeyboardButton(text='Художественная школа "Полиграф"', callback_data='v13')
-urlButton14 = InlineKeyboardButton(text='Киберспортивные танцы', callback_data='v14')
-#urlButton10 = InlineKeyboardButton(text='WorkShop', callback_data='v10')
+urlkb = InlineKeyboardMarkup(inline_keyboard= [
+    [InlineKeyboardButton(text='Официальная часть', callback_data='v1')],
+    [InlineKeyboardButton(text='Мастер-классы', callback_data='v2')],
+    [InlineKeyboardButton(text='Приёмная комиссия', callback_data='v3')],
+    [InlineKeyboardButton(text='Выставка проектов', callback_data='v4')],
+    [InlineKeyboardButton(text='Выставочная зона', callback_data='v5')],
+    [InlineKeyboardButton(text='Бизнес-зона', callback_data='v6')],
+    [InlineKeyboardButton(text='Паблик-толк с\nИгорем Асановым', callback_data='v7')],
+    [InlineKeyboardButton(text='Несекретные материалы', callback_data='v8')],
+    [InlineKeyboardButton(text='Стенды информации', callback_data='v9')],
+    [InlineKeyboardButton(text='Викторины', callback_data='v11')],
+    [InlineKeyboardButton(text='Квест "Зачетка абитуриента"', callback_data='v12')],
+    [InlineKeyboardButton(text='Художественная школа "Полиграф"', callback_data='v13')],
+    [InlineKeyboardButton(text='Киберспортивные танцы', callback_data='v14')]
+    #[InlineKeyboardButton(text='WorkShop', callback_data='v10')]
+    ], resize_keyboard = True)
 
-urlkb.add(urlButton1, urlButton7, urlButton9, urlButton4, urlButton3, urlButton2, urlButton5, urlButton11, urlButton6, urlButton8, urlButton12, urlButton13, urlButton14)
 
-
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'v3')
+@basic_router.callback_query(F.data == 'v3')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Узнать всё о поступлении, ты сможешь в холле корпуса А')
 
@@ -314,7 +309,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'v14')
+@basic_router.callback_query(F.data == 'v14')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 41")
@@ -336,7 +331,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'v12')
+@basic_router.callback_query(F.data == 'v12')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 12")
@@ -358,7 +353,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'v13')
+@basic_router.callback_query(F.data == 'v13')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
 
@@ -381,7 +376,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-'''@dp.callback_query_handler(lambda callback_query: callback_query.data == 'v10')
+'''@basic_router.callback_query(F.data == 'v10')
 async def handle_tok1(callback_query: types.CallbackQuery):
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 10")
     result = cursor.fetchone()
@@ -399,7 +394,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)'''
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'v11')
+@basic_router.callback_query(F.data == 'v11')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Ты можешь поучаствовать сразу в нескольких викторинах:\nв холле корпуса А пройдут\n«Интеллектуальная викторина о научных открытиях на стенде СНО», «Викторина по английскому языку»\nа также в аудитории А112а\n«Викторина от центра проектной деятельности»')
 
@@ -422,7 +417,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'v8')
+@basic_router.callback_query(F.data == 'v8')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Здесь ты сможешь узнать всё о поступлении, а также об изменениях в ЕГЭ по физике, русскому языку, математике, литературе.')
 
@@ -445,7 +440,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'v7')
+@basic_router.callback_query(F.data == 'v7')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Паблик-толк с блогером в сфере автоспорта Игорем Асановым.\n\n🤔Задумывались о том, как превратить своё хобби в профессию?\n\nНа День открытых дверей мы пригласили документалиста и блогера в сфере автоспорта Игоря Асанова. На паблик-токе мы обсудим, как сочетать несочетаемое и выбрать профессию по интересам так, чтобы потом не разочароваться. Начинайте готовить свои вопросы!\n\nКонечно, познакомим вас с флагманскими проектами, покажем студенческие разработки на выставке проектной деятельности и расскажем про науку и внеучебную жизнь в университете.\n\nУвидимся в 11:00 в аудитории А200!')
 
@@ -468,7 +463,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'v4')
+@basic_router.callback_query(F.data == 'v4')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Здесь помимо просмотра выставки проектов, вы также сможете поучаствовать в увлекательных викторинах и мастер-классах от центра проектной деятельности.')
 
@@ -489,7 +484,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
 
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'v5')
+@basic_router.callback_query(F.data == 'v5')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Посетить «Выставочные зоны» можно в аудиториях Б303 и Б410')
 
@@ -509,7 +504,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'v6')
+@basic_router.callback_query(F.data == 'v6')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 6")
@@ -528,7 +523,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'v9')
+@basic_router.callback_query(F.data == 'v9')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Cтенды информации:\n«Инженерная школа»\n«Курсы подготовки к ЕГЭ»\n«Договорной отдел»\nнаходятся в аудитории - В104\n\nCтенды информации:\n«Профсоюзной организации работников и обучающихся»\n«Управления студенческого городка»\n«Управления по международной интеграции и работе с иностранными студентами»\nнаходятся в аудитории - В105')
 
@@ -549,24 +544,23 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(text='v2')
+@basic_router.callback_query(F.data=='v2')
 async def v2_call(callback : types.CallbackQuery):
 	await callback.message.answer('Выбери мастер-класс по интересующему тебя направлению:', reply_markup=inm)
 	await callback.answer()
 
 # Если выбор пал на офиц часть
-inm = InlineKeyboardMarkup(row_width=1)
-sm1 = InlineKeyboardButton(text='Арт, дизайн и медиа', callback_data='m1')
-sm2 = InlineKeyboardButton(text='Урбанистика', callback_data='m2')
-sm4 = InlineKeyboardButton(text='Бизнес', callback_data='m4')
-sm5 = InlineKeyboardButton(text='Информационные технологии', callback_data='m5')
-sm6 = InlineKeyboardButton(text='Транспорт, цифра, логистика', callback_data='m6')
-sm3 = InlineKeyboardButton(text='Экология и технологии жизни', callback_data='m3')
-sm7 = InlineKeyboardButton(text='Технологии, материалы и производство', callback_data='m7')
+inm = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Арт, дизайн и медиа', callback_data='m1')],
+    [InlineKeyboardButton(text='Урбанистика', callback_data='m2')],
+    [InlineKeyboardButton(text='Бизнес', callback_data='m4')],
+    [InlineKeyboardButton(text='Информационные технологии', callback_data='m5')],
+    [InlineKeyboardButton(text='Транспорт, цифра, логистика', callback_data='m6')],
+    [InlineKeyboardButton(text='Экология и технологии жизни', callback_data='m3')],
+    [InlineKeyboardButton(text='Технологии, материалы и производство', callback_data='m7')],
+], resize_keyboard = True)
 
-inm.add(sm4, sm2, sm1, sm5, sm6, sm3, sm7)
-
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'm1')
+@basic_router.callback_query(F.data == 'm1')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Мастер-классы по направлению «Арт, дизайн и медиа» проходят в аудиториях Б303, Б306, Б309, Б310, Б410')
 
@@ -586,7 +580,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'm2')
+@basic_router.callback_query(F.data == 'm2')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Мастер-классы по направлению «Урбанистика» от факультета урбанистики и городского хозяйства проходят в аудитории Б307')
 
@@ -607,7 +601,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
 
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'm4')
+@basic_router.callback_query(F.data == 'm4')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Мастер-классы по направлению «Бизнес» от факультета экономики и управления проходят в аудитории Б311')
 
@@ -627,7 +621,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'm5')
+@basic_router.callback_query(F.data == 'm5')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Мастер-классы по направлению «Информационные технологии» проходят в аудитории Н305')
 
@@ -647,7 +641,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'm3')
+@basic_router.callback_query(F.data == 'm3')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Мастер-класс по направлению «Экология и технологии жизни» от Факультета химической технологии и биотехнологии пройдёт в аудитории Б303.')
 
@@ -667,7 +661,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'm7')
+@basic_router.callback_query(F.data == 'm7')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Мастер-класс по направлению «Технологии, материалы и производство» от факультета химической технологии и биотехнологии, а также факультета машиностроения и полиграфического института пройдёт в аудитории Б303.')
 
@@ -687,7 +681,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'm6')
+@basic_router.callback_query(F.data == 'm6')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Мастер-класс по направлению «Транспорт, цифра, логистика» от транспортного факультета пройдут в аудитории Б411')
 
@@ -707,22 +701,23 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(text='v1')
+@basic_router.callback_query(F.data=='v1')
 async def v2_call(callback : types.CallbackQuery):
 	await callback.message.answer('Выбери, что хочешь посетить:', reply_markup=inkb)
 	await callback.answer()
 
 
 # Если выбор пал на офиц часть
-inkb = InlineKeyboardMarkup(row_width=1)
-s1 = InlineKeyboardButton(text='Официальная часть в А200', callback_data='w1')
-#s4 = InlineKeyboardButton(text='Трансляция официальной части', callback_data='w4')
-s2 = InlineKeyboardButton(text='Встреча с деканом факультета', callback_data='w2')
-s3 = InlineKeyboardButton(text='Встреча с директором института', callback_data='w3')
+inkb = InlineKeyboardMarkup(inline_keyboard = [
+    [InlineKeyboardButton(text='Официальная часть в А200', callback_data='w1')],
+    #[InlineKeyboardButton(text='Трансляция официальной части', callback_data='w4')],
+    [InlineKeyboardButton(text='Встреча с деканом факультета', callback_data='w2')],
+    [InlineKeyboardButton(text='Встреча с директором института', callback_data='w3')],
+], resize_keyboard = True)
 
-inkb.add(s1, s2, s3)
+
 #официальная часть
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'w1')
+@basic_router.callback_query(F.data == 'w1')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 11")
@@ -741,7 +736,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-'''@dp.callback_query_handler(lambda callback_query: callback_query.data == 'w4')
+'''@basic_router.callback_query(F.data == 'w4')
 async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Трансляция официальной части будет проходить в аудиториях: Б303 и Б404')
 
@@ -762,24 +757,24 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)'''
 
 
-@dp.callback_query_handler(text='w2')
+@basic_router.callback_query(F.data == 'w2')
 async def v2_call(callback : types.CallbackQuery):
 	await callback.message.answer('Выбери с деканом какого факультета ты хочешь встретиться:', reply_markup=inw)
 	await callback.answer()
 
-inw = InlineKeyboardMarkup(row_width=1)
-sw1 = InlineKeyboardButton(text='Машиностроение', callback_data='ww1')
-sw2 = InlineKeyboardButton(text='Урбанистика и \n'
-                                'городское хозяйство', callback_data='ww2')
-sw3 = InlineKeyboardButton(text='Химические технологии \n'
-                                'и беотехнологии', callback_data='ww3')
-sw4 = InlineKeyboardButton(text='Экономика и управление', callback_data='ww4')
-sw5 = InlineKeyboardButton(text='Информационные технологии', callback_data='ww5')
-sw6 = InlineKeyboardButton(text='Транспортный факультет', callback_data='ww6')
+inw = InlineKeyboardMarkup(inline_keyboard= [
+[InlineKeyboardButton(text='Машиностроение', callback_data='ww1')],
+[InlineKeyboardButton(text='Урбанистика и \n'
+                                'городское хозяйство', callback_data='ww2')],
+[InlineKeyboardButton(text='Химические технологии \n'
+                                'и беотехнологии', callback_data='ww3')],
+[InlineKeyboardButton(text='Экономика и управление', callback_data='ww4')],
+[InlineKeyboardButton(text='Информационные технологии', callback_data='ww5')],
+[InlineKeyboardButton(text='Транспортный факультет', callback_data='ww6')],
+], resize_keyboard = True)
 
-inw.add(sw1, sw2, sw3, sw4, sw5, sw6)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'ww1')
+@basic_router.callback_query(F.data == 'ww1')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 121")
@@ -798,7 +793,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'ww2')
+@basic_router.callback_query(F.data == 'ww2')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 122")
@@ -816,7 +811,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'ww3')
+@basic_router.callback_query(F.data == 'ww3')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 123")
@@ -835,7 +830,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'ww4')
+@basic_router.callback_query(F.data == 'ww4')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 124")
@@ -853,7 +848,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'ww5')
+@basic_router.callback_query(F.data == 'ww5')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 125")
@@ -872,7 +867,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'ww6')
+@basic_router.callback_query(F.data == 'ww6')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 126")
@@ -891,21 +886,20 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
 
 
-@dp.callback_query_handler(text='w3')
+@basic_router.callback_query(F.text == 'w3')
 async def v2_call(callback : types.CallbackQuery):
 	await callback.message.answer('Выбери с директором какого института ты хочешь встретиться:', reply_markup=ynw)
 	await callback.answer()
 
-ynw = InlineKeyboardMarkup(row_width=1)
-yw1 = InlineKeyboardButton(text='Полиграфический институт', callback_data='yw1')
-yw2 = InlineKeyboardButton(text='Институт графики и искусства\n'
-                                'книги имении В.А. Фаворского', callback_data='yw2')
-yw3 = InlineKeyboardButton(text='Институт издательского дела\n'
-                                'и журналистики', callback_data='yw3')
+ynw = InlineKeyboardMarkup(inline_keyboard= [
+    [InlineKeyboardButton(text='Полиграфический институт', callback_data='yw1')],
+    [InlineKeyboardButton(text='Институт графики и искусства\n'
+                                    'книги имении В.А. Фаворского', callback_data='yw2')],
+    [InlineKeyboardButton(text='Институт издательского дела\n'
+                                    'и журналистики', callback_data='yw3')],
+], resize_keyboard = True)
 
-ynw.add(yw1, yw2, yw3)
-
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'yw1')
+@basic_router.callback_query(F.data == 'yw1')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 131")
@@ -923,7 +917,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'yw2')
+@basic_router.callback_query(F.data == 'yw2')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 132")
@@ -941,7 +935,7 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data == 'yw3')
+@basic_router.callback_query(F.data == 'yw3')
 async def handle_tok1(callback_query: types.CallbackQuery):
 
     cursor.execute("SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 133")
@@ -959,12 +953,16 @@ async def handle_tok1(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
 
+async def main():
+    logging.basicConfig(
+        level=logging.INFO, 
+        format="%(asctime)s - %(levelname)s - %(name)s - %(message)s")
+    dp = Dispatcher(storage=MemoryStorage(), fsm_strategy=FSMStrategy.CHAT)
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
-
-'''if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.create_task(scheduler())'''
-
-executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
 # Запуск бота
 
+if __name__ == "__main__":
+    asyncio.run(main())
+    
