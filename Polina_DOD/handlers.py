@@ -22,14 +22,13 @@ basic_router = Router()
 async def commands_start(message: types.Message):
     user_id = message.from_user.id
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    cursor.execute('INSERT INTO user_stat (user_id, timestamp) VALUES (?, ?)', (user_id, timestamp)) #TODO: db connections do not respond
+    cursor.execute('INSERT INTO user_stat (user_id, timestamp) VALUES (?, ?)', (user_id, timestamp))
     conn.commit()
-    print("here")
     pdf_file = 'Программа Дня открытых дверей.pdf'
 
     try:
-        with open(pdf_file, 'rb') as file:
-            await bot.send_document(chat_id=message.chat.id, document=file)
+        file = types.FSInputFile(pdf_file)
+        await bot.send_document(chat_id=message.chat.id, document=file)
     except FileNotFoundError:
         logging.error(f'Файл {pdf_file} не найден.')
         await message.answer('Файл не найден.')
@@ -137,7 +136,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await asyncio.sleep(0.5)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
@@ -159,7 +159,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await asyncio.sleep(0.5)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
@@ -181,7 +182,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await asyncio.sleep(0.5)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
@@ -204,7 +206,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await asyncio.sleep(0.5)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
@@ -225,7 +228,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -245,7 +249,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await asyncio.sleep(0.5)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
@@ -268,7 +273,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await asyncio.sleep(0.5)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
@@ -291,6 +297,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await asyncio.sleep(0.5)
         await bot.send_message(callback_query.from_user.id, map)
         await asyncio.sleep(0.5)
@@ -314,7 +322,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -335,7 +344,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -354,7 +364,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -374,10 +385,10 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
-
         await bot.send_message(callback_query.from_user.id, innffaa)
         await bot.send_photo(callback_query.from_user.id, photo=fotka)
     else:
@@ -400,7 +411,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -420,7 +432,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -441,7 +454,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -461,7 +475,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -481,7 +496,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -501,7 +517,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -521,7 +538,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -546,7 +564,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -566,7 +585,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -592,7 +612,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -611,6 +632,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -629,7 +652,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -648,6 +672,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -666,7 +692,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
-
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -685,6 +712,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -711,6 +740,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -729,6 +760,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
@@ -747,6 +780,8 @@ async def handle_tok1(callback_query: types.CallbackQuery):
     if result:
         fotka, innffaa, fcam, map = result
         # Отправляем фотографию и текст
+        fcam = types.BufferedInputFile(fcam, "fcam")
+        fotka = types.BufferedInputFile(fotka, "fotka")
         await bot.send_message(callback_query.from_user.id, map)
         await bot.send_photo(callback_query.from_user.id, photo=fcam)
         await bot.send_message(callback_query.from_user.id, innffaa)
