@@ -8,7 +8,7 @@ conn = sqlite3.connect('my.db')
 cursor = conn.cursor()
 
 #инстанс бота
-TOKEN = '6959853578:AAG7DlllIQ5GynnPZrdfHgbKiqp1vyaixrE'
+TOKEN = ''
 bot = Bot(token=TOKEN, parse_mode=ParseMode.HTML)
 
 #переменная для хранения результатов опросов
