@@ -9,6 +9,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from pydantic import ValidationError
 
 import db
@@ -112,6 +113,20 @@ async def commands_start(message: types.Message):
 @basic_router.message(F.text == 'Новый маршрут 📌')
 async def url_command(message : types.Message):
 	await message.answer('Выбери, что хочешь посетить:  👀', reply_markup=kb.urlkb)
+
+@basic_router.message(F.text == 'Соцсети✉')
+async def url_command(message : types.Message):
+    builder = InlineKeyboardBuilder()
+    builder.row(types.InlineKeyboardButton(
+        text="ⓥVKⓚ", url="https://vk.com/mospolynavigation")
+    )
+    builder.row(types.InlineKeyboardButton(text="ⓉTelegramⒼ", url="https://t.me/mospolynavigation")
+    )
+    await message.answer(
+        'Выберите соцсеть',
+        reply_markup=builder.as_markup(),
+    )
+
 
 #команда описания бота
 @basic_router.message(Command('description'))

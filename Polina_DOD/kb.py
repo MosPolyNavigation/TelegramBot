@@ -57,5 +57,6 @@ ynwkb = InlineKeyboardMarkup(inline_keyboard= [
 # Стандартная клавиатура
 startkb = ReplyKeyboardMarkup( keyboard=[
         [KeyboardButton(text='Новый маршрут 📌')],
-        [KeyboardButton(text='Библиотека карт 🗺')]
+        [KeyboardButton(text='Библиотека карт 🗺')],
+        [KeyboardButton(text='Соцсети✉')]
 ], resize_keyboard=True)
