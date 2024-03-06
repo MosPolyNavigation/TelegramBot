@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from contextlib import suppress
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from aiogram import types, F, Router
 from aiogram.exceptions import TelegramBadRequest
