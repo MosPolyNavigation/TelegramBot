@@ -41,6 +41,16 @@ async def commands_start(message: types.Message):
 #обновление бота
 @basic_router.message(Command('restart'))
 async def commands_restart(message: types.Message):
+    pdf_file = 'Программа Дня открытых дверей.pdf'
+    try:
+        file = types.FSInputFile(pdf_file)
+        await bot.send_document(chat_id=message.chat.id, document=file)
+    except FileNotFoundError:
+        logging.error(f'Файл {pdf_file} не найден.')
+        await message.answer('Файл не найден.')
+    except ValidationError:
+        logging.error(f'Ошибка валидации')
+        await message.answer('Ошибка валидации.')
     await message.answer('Чтобы продолжить, нажми на кнопку «Новый маршрут», кнопка расположена внизу экрана.', reply_markup=kb.startkb)
 
 #команда для отправления ссылки на сайт библиотеки карт
