@@ -57,5 +57,11 @@ ynwkb = InlineKeyboardMarkup(inline_keyboard= [
 # Стандартная клавиатура
 startkb = ReplyKeyboardMarkup( keyboard=[
         [KeyboardButton(text='Новый маршрут 📌')],
-        [KeyboardButton(text='Библиотека карт 🗺')]
+        [KeyboardButton(text='Библиотека карт 🗺')],
+        [KeyboardButton(text='Наши соцсети ✉')]
+], resize_keyboard=True)
+
+builder = InlineKeyboardMarkup(inline_keyboard= [
+        [InlineKeyboardButton(text="VK", url="https://vk.com/mospolynavigation")],
+        [InlineKeyboardButton(text="Telegram", url="https://t.me/mospolynavigation")]
 ], resize_keyboard=True)

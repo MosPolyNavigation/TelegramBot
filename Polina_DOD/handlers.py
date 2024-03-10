@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from contextlib import suppress
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from aiogram import types, F, Router
 from aiogram.exceptions import TelegramBadRequest
@@ -16,6 +16,7 @@ import kb
 from env import *
 
 basic_router = Router()
+admin_id = []
 
 #вызов, после нажатия старт, клавиатуры (кнопки - новый маршрут, библиотека карт) и программы ДОДа
 @basic_router.message(Command('start'))
@@ -40,6 +41,16 @@ async def commands_start(message: types.Message):
 #обновление бота
 @basic_router.message(Command('restart'))
 async def commands_restart(message: types.Message):
+    pdf_file = 'Программа Дня открытых дверей.pdf'
+    try:
+        file = types.FSInputFile(pdf_file)
+        await bot.send_document(chat_id=message.chat.id, document=file)
+    except FileNotFoundError:
+        logging.error(f'Файл {pdf_file} не найден.')
+        await message.answer('Файл не найден.')
+    except ValidationError:
+        logging.error(f'Ошибка валидации')
+        await message.answer('Ошибка валидации.')
     await message.answer('Чтобы продолжить, нажми на кнопку «Новый маршрут», кнопка расположена внизу экрана.', reply_markup=kb.startkb)
 
 #команда для отправления ссылки на сайт библиотеки карт
@@ -56,42 +67,64 @@ async def open_website(message: types.Message):
 #команда для бота, чтобы увидеть общее количество новых пользователей за выбранный период времени
 @basic_router.message(Command('users'))
 async def get_users_stat(message: types.Message):
-    start_time = '2023-01-01 00:00:00'  #начальное время
-    end_time = '2024-12-31 23:59:59'  #конечное время
-    total_users = await db.count_users_stat(start_time, end_time)
+    #определяем начальное и конечное время из самых ранних и поздних записей в базе данных
+    cursor.execute('SELECT MIN(timestamp), MAX(timestamp) FROM user_stat')
+    start_time_str, end_time_str = cursor.fetchone()
+    start_time = datetime.fromisoformat(start_time_str)#преобразуем полученные строки с датами в объекты datetime 
+    end_time = datetime.fromisoformat(end_time_str)
 
-    end_December = '2023-12-31 23:59:59'
-    start_December = '2023-12-01 00:00:00'
-    users_December = await db.count_users_December(start_December, end_December)
+    total_users = await db.count_users_stat(start_time_str, end_time_str)#считаем общее количество пользвателей за указанный диапазон (от самой ранней записи в БД до самой поздней) 
 
-    end_January = '2024-01-31 23:59:59'
-    start_January = '2024-01-01 00:00:00'
-    users_January = await db.count_users_January(start_January, end_January)
+    current_month = start_time.replace(day=1)#задаём начальный месяц
+    response_text = f'Общее количество пользователей за весь период: {total_users}\n\n'
 
-    end_February = '2024-02-29 23:59:59'
-    start_February = '2024-02-01 00:00:00'
-    users_February = await db.count_users_February(start_February, end_February)
-    await message.answer(f'Общее количество пользователей за весь период времени: {total_users} \n\nза декабрь 2023: {users_December} \nза январь 2024: {users_January} \nза февраль 2024: {users_February}')
+    months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+
+    while current_month <= end_time:
+        month_start = current_month
+        month_name = months[current_month.month - 1] #задаём название текущего месяца  
+        if current_month.month == 12: 
+            month_end = current_month.replace(year=current_month.year + 1, month=1, day=1) - timedelta(seconds=1)
+        else:
+            month_end = current_month.replace(month=current_month.month + 1) - timedelta(seconds=1)
+
+        users_month = await db.count_users_month(month_start, month_end) #считаем количество пользователей за текущий месяц
+        response_text += f'за {month_name} {current_month.year}: {users_month}\n'
+
+        current_month = month_end + timedelta(seconds=1)  #переходим к следующему месяцу
+
+    await message.answer(response_text, parse_mode=ParseMode.HTML)
 
 #команда для бота, чтобы увидеть общее количество пользователей за выбранный период времени (для библиотеки карт)
 @basic_router.message(Command('url'))
 async def get_users_url(message: types.Message):
-    start_url = '2023-01-01 00:00:00'  #начальное время
-    end_url = '2024-12-31 23:59:59'  #конечное время
-    total_url = await db.count_users_url(start_url, end_url)
+    #определяем начальное и конечное время из самых ранних и поздних записей в базе данных
+    cursor.execute('SELECT MIN(timestampurl), MAX(timestampurl) FROM url')
+    start_time_str, end_time_str = cursor.fetchone()
+    start_time = datetime.fromisoformat(start_time_str)#преобразуем полученные строки с датами в объекты datetime 
+    end_time = datetime.fromisoformat(end_time_str)
 
-    end_url_December = '2023-12-31 23:59:59'
-    start_url_December = '2023-12-01 00:00:00'
-    users_url_December = await db.count_users_url_December(start_url_December, end_url_December)
+    total_url = await db.count_users_url(start_time_str, end_time_str)#считаем общее количество пользвателей за указанный диапазон (от самой ранней записи в БД до самой поздней) 
 
-    end_url_January = '2024-01-31 23:59:59'
-    start_url_January = '2024-01-01 00:00:00'
-    users_url_January = await db.count_users_url_January(start_url_January, end_url_January)
+    current_month = start_time.replace(day=1)#задаём начальный месяц
+    response_text = f'Общее количество пользователей за весь период: {total_url}\n\n'
 
-    end_url_February = '2024-02-29 23:59:59'
-    start_url_February = '2024-02-01 00:00:00'
-    users_url_February = await db.count_users_url_February(start_url_February, end_url_February)
-    await message.answer(f'Общее количество пользователей за весь период времени, перешедших по ссылке: {total_url} \n\nза декабрь 2023: {users_url_December}  \nза январь 2024: {users_url_January} \nза февраль 2024: {users_url_February} ')
+    months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+
+    while current_month <= end_time:
+        month_start = current_month
+        month_name = months[current_month.month - 1] #задаём название текущего месяца  
+        if current_month.month == 12: 
+            month_end = current_month.replace(year=current_month.year + 1, month=1, day=1) - timedelta(seconds=1)
+        else:
+            month_end = current_month.replace(month=current_month.month + 1) - timedelta(seconds=1)
+
+        users_month_url = await db.count_users_month_url(month_start, month_end) #считаем количество пользователей за текущий месяц
+        response_text += f'за {month_name} {current_month.year}: {users_month_url}\n'
+
+        current_month = month_end + timedelta(seconds=1)  #переходим к следующему месяцу
+
+    await message.answer(response_text, parse_mode=ParseMode.HTML)
 
 #получение результатов опроса
 @basic_router.message(Command('results'))
@@ -112,6 +145,21 @@ async def commands_start(message: types.Message):
 @basic_router.message(F.text == 'Новый маршрут 📌')
 async def url_command(message : types.Message):
 	await message.answer('Выбери, что хочешь посетить:  👀', reply_markup=kb.urlkb)
+
+@basic_router.message(F.text == 'Наши соцсети ✉')
+async def url_command(message : types.Message):
+    await message.answer(
+        'Выберите соцсеть',
+        reply_markup=kb.builder)
+
+@basic_router.message(Command('commands'))
+async def send_commands(message: types.Message):
+    if message.from_user.id in admin_id: 
+        commands_text = "Команды, которыми Вы можете воспользоваться:\n\n/users - Узнать количество новых пользователей\n/url - Узнать количество новых пользователей, перешедших по ссылке"
+    else:
+        commands_text = "Команды, которыми Вы можете воспользоваться:\n\n/description - Описание бота\n/restart - Обновление бота\n/newroute - Новый маршрут"
+    
+    await message.answer(commands_text)
 
 #команда описания бота
 @basic_router.message(Command('description'))
