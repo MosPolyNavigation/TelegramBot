@@ -1,16 +1,14 @@
-import logging
 import asyncio
-
-from aiogram import Dispatcher
-
-from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.fsm.strategy import FSMStrategy
-from aiogram.filters import Command
-
+import logging
 from datetime import datetime
 
-from handlers import basic_router
+from aiogram import Dispatcher
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.strategy import FSMStrategy
+
 from env import *
+from handlers import basic_router
+
 
 async def main():
     logging.basicConfig(
