@@ -7,7 +7,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.strategy import FSMStrategy
 
 from env import *
-from handlers import basic_router
+from handlers import basic_router, send_pdf_file
 
 
 async def main():
@@ -19,6 +19,21 @@ async def main():
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+
+#отправка программы ДОД
+async def send_dod():
+    # год, месяц, день, время отправки файла
+    scheduled_time = datetime(2024, 3, 23, 10, 0, 0)
+
+    # ожидание до момента отправки файла
+    while datetime.now() < scheduled_time:
+        await asyncio.sleep(60)  # проверка каждую минуту
+
+    # получение списка всех пользователей
+    users = await get_all_users()
+
+    for user_id in users:
+        await bot.send_document(chat_id = user_id, document = 'Программа Дня открытых дверей.pdf')
 
 
 # отправка опроса в определенный день и время
@@ -51,7 +66,13 @@ async def send_poll():
 async def get_users_in_period(start_time, end_time):
     cursor.execute('SELECT DISTINCT user_id FROM user_stat WHERE timestamp BETWEEN ? AND ?', (start_time, end_time))
     users = [row[0] for row in cursor.fetchall()]
-    return users
+    return users('SELECT DISTINCT user_id FROM user_stat')
+
+
+async def get_all_users():
+    cursor.execute('SELECT DISTINCT user_id FROM user_stat')
+    users = [row[0] for row in cursor.fetchal()]
+    return users('SELECT DISTINCT user_id FROM user_stat')
 
 
 async def scheduler():
