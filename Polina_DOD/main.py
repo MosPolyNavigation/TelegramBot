@@ -24,11 +24,11 @@ async def main():
 #отправка программы ДОД
 async def send_dod():
     # год, месяц, день, время отправки файла
-    scheduled_time = datetime(2024, 3, 15, 17, 22, 0, 0)
+    scheduled_time = datetime(2024, 3, 23, 9, 0, 0, 0)
 
     # ожидание до момента отправки файла
     while datetime.now() < scheduled_time:
-        await asyncio.sleep(10)  # проверка каждую минуту
+        await asyncio.sleep(60)  # проверка каждую минуту
 
     start_time = '2023-01-01 00:00:00'
     end_time = '2030-01-01 23:59:59'
