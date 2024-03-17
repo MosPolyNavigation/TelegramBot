@@ -1,7 +1,9 @@
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, time
 
+from asgiref.sync import async_to_sync
+import pytz
 from aiogram import Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.strategy import FSMStrategy
@@ -19,28 +21,33 @@ async def main():
     dp.include_router(basic_router)
 
     await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
-#отправка программы ДОД
+    asyncio.create_task(dp.start_polling(bot, handle_as_tasks=True, allowed_updates=dp.resolve_used_update_types()))
+    while True:
+        asyncio.create_task(send_dod())
+        await asyncio.sleep(60)
+
+
+
+
+# отправка программы ДОД
+
 async def send_dod():
-    # год, месяц, день, время отправки файла
-    scheduled_time = datetime(2024, 3, 23, 9, 0, 0, 0)
+    # год, месяц, день, время отправки файла и ограничение
+    scheduled_time_1 = datetime(2024, 3, 23, 9, 0, 0)
+    scheduled_time_2 = datetime(2024, 3, 23, 9, 1, 0)
 
     # ожидание до момента отправки файла
-    while datetime.now() < scheduled_time:
+    while datetime.now() < scheduled_time_1 or datetime.now() > scheduled_time_2:
         await asyncio.sleep(60)  # проверка каждую минуту
 
-    start_time = '2023-01-01 00:00:00'
-    end_time = '2030-01-01 23:59:59'
-
-    # получение списка всех пользователей
-    users = await get_users_in_period(start_time, end_time)
+     # получение списка всех пользователей
+    users = await get_all_users()
 
     file_pdf = 'Программа Дня открытых дверей.pdf'
     file = types.FSInputFile(file_pdf)
     for user_id in users:
-        if user_id == '1485095294' or user_id == '1708607317':
-            await bot.send_document(chat_id=user_id, document=file)
+        await bot.send_document(chat_id=user_id, document=file)
 
 
 # отправка опроса в определенный день и время
@@ -78,8 +85,8 @@ async def get_users_in_period(start_time, end_time):
 
 async def get_all_users():
     cursor.execute('SELECT DISTINCT user_id FROM user_stat')
-    users = [row[0] for row in cursor.fetchal()]
-    return users('SELECT DISTINCT user_id FROM user_stat')
+    users = [row[0] for row in cursor.fetchall()]
+    return users
 
 
 async def scheduler():
@@ -92,6 +99,10 @@ async def scheduler():
             await asyncio.sleep(86400)  # повтор проверки каждые 24 часа (86400 секунды)
 
 
+
+
+
+# asyncio.get_running_loop().create_task(send_dod())
 # Запуск бота
 
 if __name__ == "__main__":
