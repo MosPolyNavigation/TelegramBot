@@ -9,6 +9,20 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS url (
                     user_id INTEGER,
                     timestampurl TEXT
                 )''')
+
+cursor.execute("PRAGMA table_info(url)")
+columns = cursor.fetchall()
+
+timestampurl_exists = False
+for column in columns:
+    if column[1] == 'timestampurl':
+        timestampurl_exists = True
+        break
+
+# если в таблице url есть столбец timestampurl, переименовываем его на timestamp (это нужно для использования функции по подсчёту пользователей, не вмешиваясь в бд)
+if timestampurl_exists:
+    cursor.execute("ALTER TABLE url RENAME COLUMN timestampurl TO timestamp")
+
 cursor.execute('''CREATE TABLE IF NOT EXISTS user_votes (
                     user_id INTEGER,
                     answer TEXT
@@ -19,48 +33,25 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS file_stats (
                     timestamp TEXT
                 )''')
 
+cursor.execute('''CREATE TABLE IF NOT EXISTS network_stats (
+                    user_id INTEGER,
+                    timestamp TEXT
+                )''')
 
-# функции для подсчета общего количества пользователей за определенный период времени (за весь период, декабрь, январь и тд)
-async def count_users_stat(start_time, end_time):
-    cursor.execute('SELECT COUNT(DISTINCT user_id) FROM user_stat WHERE timestamp BETWEEN ? AND ?',
-                   (start_time, end_time))
-    total_users = cursor.fetchone()[0]
-    return total_users
-
-
-async def count_users_month(start_time, end_time):
+#функция для подсчета общего количества пользователей, нажавших на каждую кнопку соответственно, за весь период
+async def count_users_button(table_name, start_time, end_time):
+    cursor.execute(f'SELECT COUNT(DISTINCT user_id) FROM {table_name} WHERE timestamp BETWEEN ? AND ?', (start_time, end_time))
+    total_users = cursor.fetchone()[0] #новые (уникальные) пользователи
+    cursor.execute(f'SELECT COUNT(*) FROM {table_name} WHERE timestamp BETWEEN ? AND ?', (start_time, end_time))
+    total_clicks = cursor.fetchone()[0] #все нажатия на кнопку
+    return total_users, total_clicks
+  
+#функция для подсчета количества пользователей, нажавших на каждую кнопку соответственно, помесячно
+async def count_users_month(table_name, start_time, end_time):
     cursor.execute(
-        'SELECT COUNT(DISTINCT user_id) FROM user_stat WHERE timestamp BETWEEN ? AND ? AND user_id NOT IN (SELECT DISTINCT user_id FROM user_stat WHERE timestamp < ?)',
+        f'SELECT COUNT(DISTINCT user_id) FROM {table_name} WHERE timestamp BETWEEN ? AND ? AND user_id NOT IN (SELECT DISTINCT user_id FROM {table_name} WHERE timestamp < ?)',
         (start_time, end_time, start_time))
-    users_month = cursor.fetchone()[0]
-    return users_month
-
-
-# функции для подсчета общего количества пользователей за выбранный период времени (за весь период, декабрь, январь и тд)
-async def count_users_url(start_url, end_url):
-    cursor.execute('SELECT COUNT(DISTINCT user_id) FROM url WHERE timestampurl BETWEEN ? AND ?', (start_url, end_url))
-    total_url = cursor.fetchone()[0]
-    return total_url
-
-
-async def count_users_month_url(start_url, end_url):
-    cursor.execute(
-        'SELECT COUNT(DISTINCT user_id) FROM url WHERE timestampurl BETWEEN ? AND ? AND user_id NOT IN (SELECT DISTINCT user_id FROM url WHERE timestampurl < ?)',
-        (start_url, end_url, start_url))
-    users_month_url = cursor.fetchone()[0]
-    return users_month_url
-
-
-async def count_users_file(start_time, end_time):
-    cursor.execute('SELECT COUNT(DISTINCT user_id) FROM file_stats WHERE timestamp BETWEEN ? AND ?',
-                   (start_time, end_time))
-    total_users = cursor.fetchone()[0]
-    return total_users
-
-
-async def count_users_month_file(start_time, end_time):
-    cursor.execute(
-        'SELECT COUNT(DISTINCT user_id) FROM file_stats WHERE timestamp BETWEEN ? AND ? AND user_id NOT IN (SELECT DISTINCT user_id FROM file_stats WHERE timestamp < ?)',
-        (start_time, end_time, start_time))
-    users_month = cursor.fetchone()[0]
-    return users_month
+    users_month = cursor.fetchone()[0] #новые (уникальные) пользователи
+    cursor.execute(f'SELECT COUNT(*) FROM {table_name} WHERE timestamp BETWEEN ? AND ?', (start_time, end_time))
+    total_month = cursor.fetchone()[0] #все нажатия на кнопку
+    return users_month, total_month
