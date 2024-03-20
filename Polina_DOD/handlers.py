@@ -68,6 +68,39 @@ async def send_dod_program(message: types.Message):
     cursor.execute('INSERT INTO file_stats (user_id, timestamp) VALUES (?, ?)', (user_id, timestampurl))
     conn.commit()
 
+#region Опрос
+    
+# получение результатов опроса
+@basic_router.message(Command('results'))
+async def results(message: types.Message):
+    await message.answer(f"Результаты опроса: \n\"Отлично:\" {poll_results[0]}\n\"Хорошо:\" {poll_results[1]}\n\"Удовлетворительно:\" {poll_results[2]}\n\"Плохо:\" {poll_results[3]}\n\"Ужасно:\" {poll_results[4]}\n")
+
+@basic_router.poll_answer()
+async def poll_answer_handler(answer: types.PollAnswer):
+    if answer.user.id not in voted_users:
+        voted_users.append(answer.user.id)
+        poll_results.update({answer.option_ids[0]: poll_results[answer.option_ids[0]] + 1})
+        await bot.send_message(answer.user.id, "Спасибо за оценку!")
+    else:
+        await bot.send_message(answer.user.id, "Вы уже дали свою оценку!")
+
+@basic_router.message(Command('poll'))
+async def poll_command(message: types.Message):
+    if message.from_user.id in voted_users:
+        await message.answer("Вы уже дали свою оценку!")
+        return
+    await message.answer_poll(question = 'День открытых дверей окончен.\nПожалуйста, оцените работу бота', 
+                              options = ['Отлично',
+                                         'Хорошо',
+                                         'Удовлетворительно', 
+                                         'Плохо',
+                                         'Ужасно'],
+                              is_anonymous = False,
+                              type = 'regular',
+                              allows_multiple_answers = False)
+
+#endregion
+
 
 # команда для бота, чтобы увидеть общее количество новых пользователей за выбранный период времени
 @basic_router.message(Command('users'))
@@ -166,17 +199,6 @@ async def get_file_stats(message: types.Message):
 
     await message.answer(response_text, parse_mode=ParseMode.HTML)
 
-# получение результатов опроса
-@basic_router.message(Command('results'))
-async def results(message: types.Message):
-    user_id = message.from_user.id
-    if user_id in poll_results:
-        total = poll_results[user_id].options
-        await message.answer(f'Результаты опроса:\n {total} ')
-    else:
-        await message.answer('Результаты опроса еще не доступны')
-
-
 # эта штучка нужна, если вдруг пользователь нажмёт в описании бота на данную команду (по факту делает то же самое, что и команда старт)
 @basic_router.message(Command('newroute'))
 async def commands_start(message: types.Message):
@@ -205,7 +227,6 @@ async def send_commands(message: types.Message):
         commands_text = "Команды, которыми Вы можете воспользоваться:\n\n/description - Описание бота\n/restart - Обновление бота\n/newroute - Новый маршрут"
 
     await message.answer(commands_text)
-
 
 # команда описания бота
 @basic_router.message(Command('description'))
