@@ -11,7 +11,7 @@ import kb
 from env import *
 
 basic_router = Router()
-admin_id = []
+admin_id = [] 
 
 
 async def send_pdf_file(message: types.Message):
@@ -69,7 +69,7 @@ async def send_dod_program(message: types.Message):
     conn.commit()
 
 
-# команда для бота, чтобы увидеть общее количество новых пользователей за выбранный период времени
+# команда для бота, чтобы статистику для кнопки старт, здесь выводим только данные по новым пользователям, без общего количества кликов
 @basic_router.message(Command('users'))
 async def get_users_stat(message: types.Message):
     # определяем начальное и конечное время из самых ранних и поздних записей в базе данных
@@ -78,11 +78,11 @@ async def get_users_stat(message: types.Message):
     start_time = datetime.fromisoformat(start_time_str)  # преобразуем полученные строки с датами в объекты datetime
     end_time = datetime.fromisoformat(end_time_str)
 
-    total_users = await db.count_users_stat(start_time_str,
-                                            end_time_str)  # считаем общее количество пользвателей за указанный диапазон (от самой ранней записи в БД до самой поздней)
+    total_users, total_clicks = await db.count_users_button('user_stat', start_time_str,
+                                                          end_time_str)  # считаем общее количество пользвателей за указанный диапазон (от самой ранней записи в БД до самой поздней)
 
     current_month = start_time.replace(day=1)  # задаём начальный месяц
-    response_text = f'Общее количество пользователей за весь период: {total_users}\n\n'
+    response_text = f'<b><i>Новые пользователи:</i></b> {total_users}\n\n'
 
     months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь',
               'Декабрь']
@@ -95,8 +95,8 @@ async def get_users_stat(message: types.Message):
         else:
             month_end = current_month.replace(month=current_month.month + 1) - timedelta(seconds=1)
 
-        users_month = await db.count_users_month(month_start,
-                                                 month_end)  # считаем количество пользователей за текущий месяц
+        users_month, total_month = await db.count_users_month('user_stat',month_start,
+                                                          month_end)  # считаем количество пользователей за текущий месяц
         response_text += f'за {month_name} {current_month.year}: {users_month}\n'
 
         current_month = month_end + timedelta(seconds=1)  # переходим к следующему месяцу
@@ -104,20 +104,21 @@ async def get_users_stat(message: types.Message):
     await message.answer(response_text, parse_mode=ParseMode.HTML)
 
 
-# команда для бота, чтобы увидеть общее количество пользователей за выбранный период времени (для библиотеки карт)
+# команда для бота, чтобы увидеть статистику для кнопки "Библиотека карт" - (новые пользователи + все клилки на кнопку)
 @basic_router.message(Command('url'))
 async def get_users_url(message: types.Message):
     # определяем начальное и конечное время из самых ранних и поздних записей в базе данных
-    cursor.execute('SELECT MIN(timestampurl), MAX(timestampurl) FROM url')
+    cursor.execute('SELECT MIN(timestamp), MAX(timestamp) FROM url')
     start_time_str, end_time_str = cursor.fetchone()
     start_time = datetime.fromisoformat(start_time_str)  # преобразуем полученные строки с датами в объекты datetime
     end_time = datetime.fromisoformat(end_time_str)
 
-    total_url = await db.count_users_url(start_time_str,
+    total_url, total_entries = await db.count_users_button('url', start_time_str,
                                          end_time_str)  # считаем общее количество пользвателей за указанный диапазон (от самой ранней записи в БД до самой поздней)
 
     current_month = start_time.replace(day=1)  # задаём начальный месяц
-    response_text = f'Общее количество пользователей за весь период: {total_url}\n\n'
+    response_text = f'<b><i>Новые пользователи:</i></b> {total_url}\n'
+    response_text +=f'-------------------------------------\n<b><i>Всего вхождений:</i></b> {total_entries}\n\n' 
 
     months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь',
               'Декабрь']
@@ -130,14 +131,15 @@ async def get_users_url(message: types.Message):
         else:
             month_end = current_month.replace(month=current_month.month + 1) - timedelta(seconds=1)
 
-        users_month_url = await db.count_users_month_url(month_start,
+        users_month_url, total_month_entries = await db.count_users_month('url', month_start,
                                                          month_end)  # считаем количество пользователей за текущий месяц
-        response_text += f'за {month_name} {current_month.year}: {users_month_url}\n'
+        response_text += f'за {month_name} {current_month.year}:\nновые {users_month_url}\nвсего {total_month_entries}\n\n'
 
         current_month = month_end + timedelta(seconds=1)  # переходим к следующему месяцу
 
     await message.answer(response_text, parse_mode=ParseMode.HTML)
 
+# команда для бота, чтобы увидеть статистику кнопки "Программа ДОД" - (новые пользователи + все клилки на кнопку)                                                                                                                                                       (для программы ДОД)
 @basic_router.message(Command('file'))
 async def get_file_stats(message: types.Message):
     cursor.execute('SELECT MIN(timestamp), MAX(timestamp) FROM file_stats')
@@ -145,8 +147,9 @@ async def get_file_stats(message: types.Message):
     start_time = datetime.fromisoformat(start_time_str)  # преобразуем полученные строки с датами в объекты datetime
     end_time = datetime.fromisoformat(end_time_str)
 
-    total_users = await db.count_users_file(start_time_str, end_time_str)
-    response_text = f'Общее количество запросов файла за весь период: {total_users}\n\n'
+    total_users, total_file = await db.count_users_button('file_stats', start_time_str, end_time_str)
+    response_text = f'<b><i>Новые пользователи:</i></b> {total_users}\n'
+    response_text +=f'-------------------------------------\n<b><i>Всего вхождений:</i></b> {total_file}\n\n'
 
     current_month = start_time.replace(day=1)
     months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
@@ -159,12 +162,43 @@ async def get_file_stats(message: types.Message):
         else:
             month_end = current_month.replace(month=current_month.month + 1) - timedelta(seconds=1)
 
-        users_month = await db.count_users_month_file(month_start, month_end)
-        response_text += f'за {month_name} {current_month.year}: {users_month}\n'
+        users_month, total_month_file = await db.count_users_month('file_stats', month_start, month_end)
+        response_text += f'за {month_name} {current_month.year}:\nновые {users_month}\nвсего {total_month_file}\n\n'
 
         current_month = month_end + timedelta(seconds=1)
 
     await message.answer(response_text, parse_mode=ParseMode.HTML)
+
+# команда для бота, чтобы увидеть статистику для кнопки "Наши соцсети" - (новые пользователи + все клилки на кнопку)
+@basic_router.message(Command('network'))
+async def get_network_stats(message: types.Message):
+    cursor.execute('SELECT MIN(timestamp), MAX(timestamp) FROM network_stats')
+    start_time_str, end_time_str = cursor.fetchone()
+    start_time = datetime.fromisoformat(start_time_str)  # преобразуем полученные строки с датами в объекты datetime
+    end_time = datetime.fromisoformat(end_time_str)
+
+    total_users, total_networke = await db.count_users_button('network_stats',start_time_str, end_time_str)
+    response_text = f'<b><i>Новые пользователи:</i></b> {total_users}\n'
+    response_text +=f'--------------------------------------\n<b><i>Всего вхождений:</i></b> {total_networke}\n\n'
+
+    current_month = start_time.replace(day=1)
+    months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+
+    while current_month <= end_time:
+        month_start = current_month
+        month_name = months[current_month.month - 1]
+        if current_month.month == 12:
+            month_end = current_month.replace(year=current_month.year + 1, month=1, day=1) - timedelta(seconds=1)
+        else:
+            month_end = current_month.replace(month=current_month.month + 1) - timedelta(seconds=1)
+
+        users_month, total_month_networke = await db.count_users_month('network_stats', month_start, month_end)
+        response_text += f'за {month_name} {current_month.year}:\nновые {users_month}\nвсего {total_month_networke}\n\n'
+
+        current_month = month_end + timedelta(seconds=1)
+
+    await message.answer(response_text, parse_mode=ParseMode.HTML)
+
 
 # получение результатов опроса
 @basic_router.message(Command('results'))
@@ -189,20 +223,20 @@ async def commands_start(message: types.Message):
 async def url_command(message: types.Message):
     await message.answer('Выбери, что хочешь посетить:  👀', reply_markup=kb.urlkb)
 
-
+# отправление инлайн-кнопок со ссылками на соцсети
 @basic_router.message(F.text == 'Наши соцсети ✉')
 async def url_command(message: types.Message):
     await message.answer(
         'Выберите соцсеть',
         reply_markup=kb.builder)
 
-
+# отправление списка доступных команд, для админовых и простых смертных соответственно 
 @basic_router.message(Command('commands'))
 async def send_commands(message: types.Message):
     if message.from_user.id in admin_id:
-        commands_text = "Команды, которыми Вы можете воспользоваться:\n\n/users - Узнать количество новых пользователей\n/url - Узнать количество новых пользователей, перешедших по ссылке"
+        commands_text = "Команды, которыми Вы можете воспользоваться:\n\n/users - количество новых пользователей\n\n/url - количество новых пользователей, перешедших по ссылке\n\n/file - количество пользователей, которые нажали на кнопку запроса файла программы ДОД\n\n/network - количество новых пользователей перешедших по кнопке на соцсети"
     else:
-        commands_text = "Команды, которыми Вы можете воспользоваться:\n\n/description - Описание бота\n/restart - Обновление бота\n/newroute - Новый маршрут"
+        commands_text = "Команды, которыми Вы можете воспользоваться:\n\n/description - Описание бота\n\n/restart - Обновление бота\n\n/newroute - Новый маршрут"
 
     await message.answer(commands_text)
 
