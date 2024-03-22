@@ -10,7 +10,7 @@ from aiogram.fsm.strategy import FSMStrategy
 from aiogram import types
 
 from env import *
-from handlers import basic_router, send_pdf_file
+from handlers import basic_router
 
 
 async def main():
@@ -28,8 +28,6 @@ async def main():
         await asyncio.sleep(60)
 
 
-
-
 # отправка программы ДОД
 
 async def send_dod():
@@ -38,16 +36,18 @@ async def send_dod():
     scheduled_time_2 = datetime(2024, 3, 23, 9, 1, 0)
 
     # ожидание до момента отправки файла
-    while datetime.now() < scheduled_time_1 and datetime.now() > scheduled_time_2:
-        await asyncio.sleep(60)  # проверка каждую минуту
-
-     # получение списка всех пользователей
+    while datetime.now() < scheduled_time_1 or datetime.now() > scheduled_time_2:
+        return 0
+    # получение списка всех пользователей
     users = await get_all_users()
 
     file_pdf = 'Программа Дня открытых дверей.pdf'
     file = types.FSInputFile(file_pdf)
     for user_id in users:
-        await bot.send_document(chat_id=user_id, caption="Привет 🕊\n\nСегодня в проходит день открытых дверей. Забирай программу мероприятий, чтобы не пропустить ничего интересного, а также используй команду /restart для обновления бота и просмотра новых функций. \n\nВстречаемся в 11:00 на Большой Семеновской, 38", document=file)
+        await bot.send_document(chat_id=user_id,
+                                caption="Привет 🕊\n\nСегодня в проходит день открытых дверей. Забирай программу мероприятий, чтобы не пропустить ничего интересного, а также используй команду /restart для обновления бота и просмотра новых функций. \n\nВстречаемся в 11:00 на Большой Семеновской, 38",
+                                document=file)
+    return 0
 
 
 # отправка опроса в определенный день и время
@@ -97,9 +97,6 @@ async def scheduler():
             print(f'An error occurred: {e}')
         finally:
             await asyncio.sleep(86400)  # повтор проверки каждые 24 часа (86400 секунды)
-
-
-
 
 
 # asyncio.get_running_loop().create_task(send_dod())
