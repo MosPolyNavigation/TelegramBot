@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 
 # создание инлайн кнопок для выбора мероприятия ДОДа
 urlkb = InlineKeyboardMarkup(inline_keyboard=[
@@ -57,7 +57,7 @@ ynwkb = InlineKeyboardMarkup(inline_keyboard=[
 # Стандартная клавиатура
 startkb = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='Новый маршрут 📌')],
-    [KeyboardButton(text='Библиотека карт 🗺')],
+    [KeyboardButton(text='Библиотека карт 🗺', web_app=WebAppInfo(url='https://mospolynavigation.github.io/dod/'))],
     [KeyboardButton(text='Наши соцсети ✉')],
     [KeyboardButton(text='Программа ДОД 📄')]
 ], resize_keyboard=True)

@@ -38,7 +38,7 @@ async def send_dod():
     scheduled_time_2 = datetime(2024, 3, 23, 9, 1, 0)
 
     # ожидание до момента отправки файла
-    while datetime.now() < scheduled_time_1 or datetime.now() > scheduled_time_2:
+    while datetime.now() < scheduled_time_1 and datetime.now() > scheduled_time_2:
         await asyncio.sleep(60)  # проверка каждую минуту
 
      # получение списка всех пользователей

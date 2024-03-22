@@ -54,11 +54,11 @@ async def open_website(message: types.Message):
     timestampurl = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     cursor.execute('INSERT INTO url (user_id, timestampurl) VALUES (?, ?)', (user_id, timestampurl))
     conn.commit()
-
-    website_url = 'https://mospolynavigation.github.io/dod/'
-    await message.answer(f'Перейти к просмотру → <a href="{website_url}">«Библиотека карт»</a>',
-                         disable_web_page_preview=True)
-
+    
+    #website_url = 'https://t.me/PoliNavigatorDOD_bot/birdsruletheworld'
+    #await message.answer(f'Перейти к просмотру → <a href="{website_url}">«Библиотека карт»</a>',
+     #                    disable_web_page_preview=True)
+    await bot.send_message(message.chat.id, reply_markup=kb.startkb)
 
 @basic_router.message(F.text == 'Программа ДОД 📄')
 async def send_dod_program(message: types.Message):
