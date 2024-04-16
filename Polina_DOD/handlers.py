@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 from aiogram import types, F, Router
 from aiogram.filters import Command
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pydantic import ValidationError
 
 import db
@@ -26,6 +27,36 @@ async def send_pdf_file(message: types.Message):
         logging.error(f'Ошибка валидации')
         await message.answer('Ошибка валидации.')
 
+
+EVENTS_PER_PAGE = 5
+total_pages = (len(kb.urlkb.inline_keyboard) + EVENTS_PER_PAGE - 1) // EVENTS_PER_PAGE
+def generate_events_pagination(current_page):
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[])
+
+    # Добавляем кнопки с мероприятиями для текущей страницы
+    start = (current_page - 1) * EVENTS_PER_PAGE
+    end = start + EVENTS_PER_PAGE
+    for button in kb.urlkb.inline_keyboard[start:end]:
+        keyboard.inline_keyboard.append([*button])
+
+
+    control = []
+    # Добавляем кнопки для пагинации
+    if current_page > 1:
+        control.append(InlineKeyboardButton(text="◀️", callback_data=f"page_{current_page-1}"))
+    else:
+        control.append(InlineKeyboardButton(text="◀️", callback_data="none", disabled=True))
+
+    control.append(InlineKeyboardButton(text=f"{current_page}/{total_pages}", callback_data="none", disabled=True))
+
+    if current_page < total_pages:
+        control.append(InlineKeyboardButton(text="▶️", callback_data=f"page_{current_page+1}"))
+    else:
+        control.append(InlineKeyboardButton(text="▶️", callback_data="none", disabled=True))
+
+    keyboard.inline_keyboard.append(control)
+
+    return keyboard
 
 # вызов, после нажатия старт, клавиатуры (кнопки - новый маршрут, библиотека карт) и программы ДОДа
 @basic_router.message(Command('start'))
@@ -225,7 +256,16 @@ async def commands_start(message: types.Message):
 # вывод сообщения после нажатия на кнопку новый маршрут
 @basic_router.message(F.text == 'Новый маршрут 📌')
 async def url_command(message: types.Message):
-    await message.answer('Выбери, что хочешь посетить:  👀', reply_markup=kb.urlkb)
+    current_page = 1
+    keyboard = generate_events_pagination(current_page)
+    await message.answer('Выбери, что хочешь посетить:  👀', reply_markup=keyboard)
+
+@basic_router.callback_query(F.data.startswith("page_"))
+async def handle_pagination(callback: types.CallbackQuery):
+    current_page = int(callback.data.split("_")[1])
+    keyboard = generate_events_pagination(current_page)
+    await callback.message.edit_reply_markup(reply_markup=keyboard)
+    await callback.answer()
 
 # отправление инлайн-кнопок со ссылками на соцсети
 @basic_router.message(F.text == 'Наши соцсети ✉')

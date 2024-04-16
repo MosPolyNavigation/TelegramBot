@@ -9,11 +9,15 @@ conn = sqlite3.connect('my.db')
 cursor = conn.cursor()
 
 # инстанс бота
-TOKEN = '7063579287:AAESk8F9-4FpcpLfIRJHm4faCzFF_9eDESk'
+# parse token from env if it exists or use default token
+TOKEN = os.getenv('TOKEN')
+if not TOKEN:
+    TOKEN = ''
+
 bot = Bot(token=TOKEN, parse_mode=ParseMode.HTML)
 
 
 # проголосовавшие пользователи
 voted_users = []
 
-poll_results:dict = json.loads(open('Polina_DOD\\poll.json').read())
+poll_results:dict = json.loads(open('./poll.json').read())
