@@ -8,7 +8,7 @@ urlkb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Выставка проектов', callback_data='v4')],
     [InlineKeyboardButton(text='Выставочная зона', callback_data='v5')],
     [InlineKeyboardButton(text='Бизнес-зона', callback_data='v6')],
-    [InlineKeyboardButton(text='Паблик-толк с\nИгорем Асановым', callback_data='v7')],
+    [InlineKeyboardButton(text='Паблик-толк с Игорем Асановым', callback_data='v7')],
     [InlineKeyboardButton(text='Несекретные материалы', callback_data='v8')],
     [InlineKeyboardButton(text='Стенды информации', callback_data='v9')],
     [InlineKeyboardButton(text='Викторины', callback_data='v11')],
