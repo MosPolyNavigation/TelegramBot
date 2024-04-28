@@ -17,8 +17,10 @@ async def main():
     dp = Dispatcher(storage=MemoryStorage(), fsm_strategy=FSMStrategy.CHAT)
     dp.include_router(basic_router)
 
-    await asyncio.create_task(send_poll())
-    await asyncio.create_task(send_dod())
+    poll_task = asyncio.create_task(send_poll())
+    _ = poll_task
+    dod_task = asyncio.create_task(send_dod())
+    _ = dod_task
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
