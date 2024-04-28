@@ -12,7 +12,7 @@ import kb
 from env import *
 
 basic_router = Router()
-admin_id = [] 
+admin_id = []
 
 
 async def send_pdf_file(message: types.Message):
@@ -30,6 +30,8 @@ async def send_pdf_file(message: types.Message):
 
 EVENTS_PER_PAGE = 5
 total_pages = (len(kb.urlkb.inline_keyboard) + EVENTS_PER_PAGE - 1) // EVENTS_PER_PAGE
+
+
 def generate_events_pagination(current_page):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[])
 
@@ -39,24 +41,24 @@ def generate_events_pagination(current_page):
     for button in kb.urlkb.inline_keyboard[start:end]:
         keyboard.inline_keyboard.append([*button])
 
-
     control = []
     # Добавляем кнопки для пагинации
     if current_page > 1:
-        control.append(InlineKeyboardButton(text="◀️", callback_data=f"page_{current_page-1}"))
+        control.append(InlineKeyboardButton(text="◀️", callback_data=f"page_{current_page - 1}"))
     else:
         control.append(InlineKeyboardButton(text="◀️", callback_data="none", disabled=True))
 
     control.append(InlineKeyboardButton(text=f"{current_page}/{total_pages}", callback_data="none", disabled=True))
 
     if current_page < total_pages:
-        control.append(InlineKeyboardButton(text="▶️", callback_data=f"page_{current_page+1}"))
+        control.append(InlineKeyboardButton(text="▶️", callback_data=f"page_{current_page + 1}"))
     else:
         control.append(InlineKeyboardButton(text="▶️", callback_data="none", disabled=True))
 
     keyboard.inline_keyboard.append(control)
 
     return keyboard
+
 
 # вызов, после нажатия старт, клавиатуры (кнопки - новый маршрут, библиотека карт) и программы ДОДа
 @basic_router.message(Command('start'))
@@ -83,7 +85,7 @@ async def commands_restart(message: types.Message):
 async def open_website(message: types.Message):
     user_id = message.from_user.id
     timestampurl = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    cursor.execute('INSERT INTO url (user_id, timestampurl) VALUES (?, ?)', (user_id, timestampurl))
+    cursor.execute('INSERT INTO url (user_id, timestamp) VALUES (?, ?)', (user_id, timestampurl))
     conn.commit()
 
     website_url = 'https://mospolynavigation.github.io/dod/'
@@ -99,40 +101,45 @@ async def send_dod_program(message: types.Message):
     cursor.execute('INSERT INTO file_stats (user_id, timestamp) VALUES (?, ?)', (user_id, timestampurl))
     conn.commit()
 
-#region Опрос
-    
+
+# region Опрос
+
 # получение результатов опроса
 @basic_router.message(Command('results'))
 async def results(message: types.Message):
-    await message.answer(f"Результаты опроса: \n\"Отлично:\" {poll_results['0']}\n\"Хорошо:\" {poll_results['1']}\n\"Удовлетворительно:\" {poll_results['2']}\n\"Плохо:\" {poll_results['3']}\n\"Ужасно:\" {poll_results['4']}\n")
+    await message.answer(
+        f"Результаты опроса: \n\"Отлично:\" {poll_results['0']}\n\"Хорошо:\" {poll_results['1']}\n\"Удовлетворительно:\" {poll_results['2']}\n\"Плохо:\" {poll_results['3']}\n\"Ужасно:\" {poll_results['4']}\n")
+
 
 @basic_router.poll_answer()
 async def poll_answer_handler(answer: types.PollAnswer):
     if answer.user.id not in voted_users:
         voted_users.append(answer.user.id)
-        poll_results.update({f'{answer.option_ids[0]}' : poll_results[f'{answer.option_ids[0]}'] + 1})
-        with open('Polina_DOD\\poll.json', 'w') as f:
+        poll_results.update({f'{answer.option_ids[0]}': poll_results[f'{answer.option_ids[0]}'] + 1})
+        with open('./poll.json', 'w') as f:
             json.dump(poll_results, f)
         await bot.send_message(answer.user.id, "Спасибо за оценку!")
     else:
         await bot.send_message(answer.user.id, "Вы уже дали свою оценку!")
+
 
 @basic_router.message(Command('poll'))
 async def poll_command(message: types.Message):
     if message.from_user.id in voted_users:
         await message.answer("Вы уже дали свою оценку!")
         return
-    await message.answer_poll(question = 'День открытых дверей окончен.\nПожалуйста, оцените работу бота', 
-                              options = ['Отлично',
-                                         'Хорошо',
-                                         'Удовлетворительно', 
-                                         'Плохо',
-                                         'Ужасно'],
-                              is_anonymous = False,
-                              type = 'regular',
-                              allows_multiple_answers = False)
+    await message.answer_poll(question='День открытых дверей окончен.\nПожалуйста, оцените работу бота',
+                              options=['Отлично',
+                                       'Хорошо',
+                                       'Удовлетворительно',
+                                       'Плохо',
+                                       'Ужасно'],
+                              is_anonymous=False,
+                              type='regular',
+                              allows_multiple_answers=False)
 
-#endregion
+
+# endregion
 
 
 # команда для бота, чтобы статистику для кнопки старт, здесь выводим только данные по новым пользователям, без общего количества кликов
@@ -145,7 +152,7 @@ async def get_users_stat(message: types.Message):
     end_time = datetime.fromisoformat(end_time_str)
 
     total_users, total_clicks = await db.count_users_button('user_stat', start_time_str,
-                                                          end_time_str)  # считаем общее количество пользвателей за указанный диапазон (от самой ранней записи в БД до самой поздней)
+                                                            end_time_str)  # считаем общее количество пользвателей за указанный диапазон (от самой ранней записи в БД до самой поздней)
 
     current_month = start_time.replace(day=1)  # задаём начальный месяц
     response_text = f'<b><i>Новые пользователи:</i></b> {total_users}\n\n'
@@ -161,8 +168,8 @@ async def get_users_stat(message: types.Message):
         else:
             month_end = current_month.replace(month=current_month.month + 1) - timedelta(seconds=1)
 
-        users_month, total_month = await db.count_users_month('user_stat',month_start,
-                                                          month_end)  # считаем количество пользователей за текущий месяц
+        users_month, total_month = await db.count_users_month('user_stat', month_start,
+                                                              month_end)  # считаем количество пользователей за текущий месяц
         response_text += f'за {month_name} {current_month.year}: {users_month}\n'
 
         current_month = month_end + timedelta(seconds=1)  # переходим к следующему месяцу
@@ -180,11 +187,11 @@ async def get_users_url(message: types.Message):
     end_time = datetime.fromisoformat(end_time_str)
 
     total_url, total_entries = await db.count_users_button('url', start_time_str,
-                                         end_time_str)  # считаем общее количество пользвателей за указанный диапазон (от самой ранней записи в БД до самой поздней)
+                                                           end_time_str)  # считаем общее количество пользвателей за указанный диапазон (от самой ранней записи в БД до самой поздней)
 
     current_month = start_time.replace(day=1)  # задаём начальный месяц
     response_text = f'<b><i>Новые пользователи:</i></b> {total_url}\n'
-    response_text +=f'-------------------------------------\n<b><i>Всего вхождений:</i></b> {total_entries}\n\n' 
+    response_text += f'-------------------------------------\n<b><i>Всего вхождений:</i></b> {total_entries}\n\n'
 
     months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь',
               'Декабрь']
@@ -198,12 +205,13 @@ async def get_users_url(message: types.Message):
             month_end = current_month.replace(month=current_month.month + 1) - timedelta(seconds=1)
 
         users_month_url, total_month_entries = await db.count_users_month('url', month_start,
-                                                         month_end)  # считаем количество пользователей за текущий месяц
+                                                                          month_end)  # считаем количество пользователей за текущий месяц
         response_text += f'за {month_name} {current_month.year}:\nновые {users_month_url}\nвсего {total_month_entries}\n\n'
 
         current_month = month_end + timedelta(seconds=1)  # переходим к следующему месяцу
 
     await message.answer(response_text, parse_mode=ParseMode.HTML)
+
 
 # команда для бота, чтобы увидеть статистику кнопки "Программа ДОД" - (новые пользователи + все клилки на кнопку)                                                                                                                                                       (для программы ДОД)
 @basic_router.message(Command('file'))
@@ -215,10 +223,11 @@ async def get_file_stats(message: types.Message):
 
     total_users, total_file = await db.count_users_button('file_stats', start_time_str, end_time_str)
     response_text = f'<b><i>Новые пользователи:</i></b> {total_users}\n'
-    response_text +=f'-------------------------------------\n<b><i>Всего вхождений:</i></b> {total_file}\n\n'
+    response_text += f'-------------------------------------\n<b><i>Всего вхождений:</i></b> {total_file}\n\n'
 
     current_month = start_time.replace(day=1)
-    months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+    months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь',
+              'Декабрь']
 
     while current_month <= end_time:
         month_start = current_month
@@ -234,6 +243,7 @@ async def get_file_stats(message: types.Message):
         current_month = month_end + timedelta(seconds=1)
 
     await message.answer(response_text, parse_mode=ParseMode.HTML)
+
 
 # получение результатов опроса
 @basic_router.message(Command('results'))
@@ -260,12 +270,14 @@ async def url_command(message: types.Message):
     keyboard = generate_events_pagination(current_page)
     await message.answer('Выбери, что хочешь посетить:  👀', reply_markup=keyboard)
 
+
 @basic_router.callback_query(F.data.startswith("page_"))
 async def handle_pagination(callback: types.CallbackQuery):
     current_page = int(callback.data.split("_")[1])
     keyboard = generate_events_pagination(current_page)
     await callback.message.edit_reply_markup(reply_markup=keyboard)
     await callback.answer()
+
 
 # отправление инлайн-кнопок со ссылками на соцсети
 @basic_router.message(F.text == 'Наши соцсети ✉')
@@ -274,7 +286,8 @@ async def url_command(message: types.Message):
         'Выберите соцсеть',
         reply_markup=kb.builder)
 
-# отправление списка доступных команд, для админовых и простых смертных соответственно 
+
+# отправление списка доступных команд, для админовых и простых смертных соответственно
 @basic_router.message(Command('commands'))
 async def send_commands(message: types.Message):
     if message.from_user.id in admin_id:
@@ -283,6 +296,7 @@ async def send_commands(message: types.Message):
         commands_text = "Команды, которыми Вы можете воспользоваться:\n\n/description - Описание бота\n\n/restart - Обновление бота\n\n/newroute - Новый маршрут"
 
     await message.answer(commands_text)
+
 
 # команда описания бота
 @basic_router.message(Command('description'))
