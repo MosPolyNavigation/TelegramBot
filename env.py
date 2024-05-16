@@ -1,6 +1,7 @@
 import sqlite3
 import json
 import codecs
+import os
 
 from aiogram import Bot
 from aiogram.enums.parse_mode import ParseMode
@@ -20,4 +21,9 @@ bot = Bot(token=TOKEN, parse_mode=ParseMode.HTML)
 # проголосовавшие пользователи
 voted_users = []
 
-poll_results:dict = json.loads(open('./poll.json').read())
+poll_results : dict = json.loads(open('poll.json').read())
+
+
+# кнопки
+inline_kbs = {}
+with open('kb.json', 'r', encoding='utf-8-sig') as f: inline_kbs = json.load(f)

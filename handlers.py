@@ -12,7 +12,7 @@ from env import *
 from fsm import *
 
 basic_router = Router()
-admin_id = [1201607212] 
+admin_id = [] 
 
 
 async def send_pdf_file(message: types.Message):

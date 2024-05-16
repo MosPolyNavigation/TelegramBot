@@ -2,7 +2,7 @@ import asyncio
 import logging
 from datetime import datetime
 
-from aiogram import Dispatcher
+from aiogram import types, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.strategy import FSMStrategy
 
