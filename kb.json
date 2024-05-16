@@ -1,0 +1,236 @@
+﻿{
+    "events": [
+        {
+            "key": "v1",
+            "has_inner": true,
+            "header": "Официальная часть",
+            "message": "Выбери, что хочешь посетить:",
+            "query": "",
+            "inner_kb": [
+                {
+                    "key": "w1",
+                    "has_inner": false,
+                    "header": "Официальная часть в А200",
+                    "message": "",
+                    "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 11"
+                },
+                {
+                    "key": "w2",
+                    "has_inner": true,
+                    "header": "Встреча с деканом факультета",
+                    "message": "Выбери с деканом какого факультета ты хочешь встретиться:",
+                    "query": "",
+                    "inner_kb": [
+                        {
+                            "key": "ww1",
+                            "has_inner": false,
+                            "header": "Машиностроение",
+                            "message": "",
+                            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 121"
+                        },
+                        {
+                            "key": "ww2",
+                            "has_inner": false,
+                            "header": "Урбанистика и \nгородское хозяйство",
+                            "message": "",
+                            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 122"
+                        },
+                        {
+                            "key": "ww3",
+                            "has_inner": false,
+                            "header": "Химические технологии \nи биотехнологии",
+                            "message": "",
+                            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 123"
+                        },
+                        {
+                            "key": "ww4",
+                            "has_inner": false,
+                            "header": "Экономика и управление",
+                            "message": "",
+                            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 124"
+                        },
+                        {
+                            "key": "ww5",
+                            "has_inner": false,
+                            "header": "Информационные технологии",
+                            "message": "",
+                            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 125"
+                        },
+                        {
+                            "key": "ww6",
+                            "has_inner": false,
+                            "header": "Транспортный факультет",
+                            "message": "",
+                            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 126"
+                        }
+                    ]
+                },
+                {
+                    "key": "w3",
+                    "has_inner": false,
+                    "header": "Встреча с директором института",
+                    "message": "Выбери с директором какого института ты хочешь встретиться:",
+                    "query": "",
+                    "inner_kb": [
+                        {
+                            "key": "yw1",
+                            "has_inner": false,
+                            "header": "Полиграфический институт",
+                            "message": "",
+                            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 131"
+                        },
+                        {
+                            "key": "yw2",
+                            "has_inner": false,
+                            "header": "Институт графики и искусства\nкниги имении В.А. Фаворского",
+                            "message": "",
+                            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 132"
+                        },
+                        {
+                            "key": "yw3",
+                            "has_inner": false,
+                            "header": "Институт издательского дела\nи журналистики",
+                            "message": "",
+                            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 133"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "v2",
+            "has_inner": true,
+            "header": "Мастер-классы",
+            "message": "Выбери мастер-класс по интересующему тебя направлению:",
+            "query": "",
+            "inner_kb": [
+                {
+                    "key": "m1",
+                    "has_inner": false,
+                    "header": "Арт, дизайн и медиа",
+                    "message": "Мастер-классы по направлению «Арт, дизайн и медиа» проходят в аудиториях Б303, Б306, Б309, Б310, Б410",
+                    "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 21"
+                },
+                {
+                    "key": "m2",
+                    "has_inner": false,
+                    "header": "Урбанистика",
+                    "message": "Мастер-классы по направлению «Урбанистика» от факультета урбанистики и городского хозяйства проходят в аудитории Б307",
+                    "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 22"
+                },
+                {
+                    "key": "m3",
+                    "has_inner": false,
+                    "header": "Бизнес",
+                    "message": "Мастер-классы по направлению «Бизнес» от факультета экономики и управления проходят в аудитории Б311",
+                    "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 23"
+                },
+                {
+                    "key": "m4",
+                    "has_inner": false,
+                    "header": "Информационные технологии",
+                    "message": "Мастер-классы по направлению «Информационные технологии» проходят в аудитории Н305",
+                    "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 24"
+                },
+                {
+                    "key": "m5",
+                    "has_inner": false,
+                    "header": "Транспорт, цифра, логистика",
+                    "message": "Мастер-класс по направлению «Транспорт, цифра, логистика» от транспортного факультета пройдут в аудитории Б411",
+                    "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 25"
+                },
+                {
+                    "key": "m6",
+                    "has_inner": false,
+                    "header": "Экология и технологии жизни",
+                    "message": "Мастер-класс по направлению «Экология и технологии жизни» от Факультета химической технологии и биотехнологии пройдёт в аудитории Б303.",
+                    "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 26"
+                },
+                {
+                    "key": "m7",
+                    "has_inner": false,
+                    "header": "Технологии, материалы и производство",
+                    "message": "Мастер-класс по направлению «Технологии, материалы и производство» от факультета химической технологии и биотехнологии, а также факультета машиностроения и полиграфического института пройдёт в аудитории Б303.",
+                    "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 10"
+                }
+            ]
+        },
+        {
+            "key": "v3",
+            "has_inner": false,
+            "header": "Приёмная комиссия",
+            "message": "Узнать всё о поступлении, ты сможешь в холле корпуса А",
+            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 3"
+        },
+        {
+            "key": "v4",
+            "has_inner": false,
+            "header": "Выставка проектов",
+            "message": "Здесь помимо просмотра выставки проектов, вы также сможете поучаствовать в увлекательных викторинах и мастер-классах от центра проектной деятельности.",
+            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 4"
+        },
+        {
+            "key": "v5",
+            "has_inner": false,
+            "header": "Выставочная зона",
+            "message": "Посетить «Выставочные зоны» можно в аудиториях Б303 и Б410",
+            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 5"
+        },
+        {
+            "key": "v6",
+            "has_inner": false,
+            "header": "Бизнес-зона",
+            "message": "",
+            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 6"
+        },
+        {
+            "key": "v7",
+            "has_inner": false,
+            "header": "Паблик-толк с\nИгорем Асановым",
+            "message": "Паблик-толк с блогером в сфере автоспорта Игорем Асановым.\n\nЗадумывались о том, как превратить своё хобби в профессию?\n\nНа День открытых дверей мы пригласили документалиста и блогера в сфере автоспорта Игоря Асанова. На паблик-токе мы обсудим, как сочетать несочетаемое и выбрать профессию по интересам так, чтобы потом не разочароваться. Начинайте готовить свои вопросы!\n\nКонечно, познакомим вас с флагманскими проектами, покажем студенческие разработки на выставке проектной деятельности и расскажем про науку и внеучебную жизнь в университете.\n\nУвидимся в 11:00 в аудитории А200!",
+            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 7"
+        },
+        {
+            "key": "v8",
+            "has_inner": false,
+            "header": "Несекретные материалы",
+            "message": "Здесь ты сможешь узнать всё о поступлении, а также об изменениях в ЕГЭ по физике, русскому языку, математике, литературе.",
+            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 3"
+        },
+        {
+            "key": "v9",
+            "has_inner": false,
+            "header": "Стенды информации",
+            "message": "Cтенды информации:\n«Инженерная школа»\n«Курсы подготовки к ЕГЭ»\n«Договорной отдел»\nнаходятся в аудитории - В104\n\nCтенды информации:\n«Профсоюзной организации работников и обучающихся»\n«Управления студенческого городка»\n«Управления по международной интеграции и работе с иностранными студентами»\nнаходятся в аудитории - В105",
+            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 9"
+        },
+        {
+            "key": "v10",
+            "has_inner": false,
+            "header": "Викторины",
+            "message": "Ты можешь поучаствовать сразу в нескольких викторинах:\nв холле корпуса А пройдут\n«Интеллектуальная викторина о научных открытиях на стенде СНО», «Викторина по английскому языку»\nа также в аудитории А112а\n«Викторина от центра проектной деятельности»",
+            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 111"
+        },
+        {
+            "key": "v11",
+            "has_inner": false,
+            "header": "Квест \"Зачетка абитуриента\"",
+            "message": "",
+            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 12"
+        },
+        {
+            "key": "v12",
+            "has_inner": false,
+            "header": "Художественная школа \"Полиграф\"",
+            "message": "",
+            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 13"
+        },
+        {
+            "key": "v13",
+            "has_inner": false,
+            "header": "Киберспортивные танцы",
+            "message": "",
+            "query": "SELECT fotka, innffaa, fcam, map FROM ti WHERE korpus = 41"
+        }
+    ]
+}
