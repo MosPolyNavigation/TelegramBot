@@ -9,7 +9,6 @@ from aiogram.fsm.strategy import FSMStrategy
 from env import *
 from handlers import basic_router
 
-
 async def main():
     logging.basicConfig(
         level=logging.INFO,
@@ -20,8 +19,29 @@ async def main():
     poll_waiting = asyncio.create_task(send_poll())
     poll_waiting
 
+    file_sending = asyncio.create_task(send_dod())
+    file_sending
+    
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+
+# отправка программы ДОД
+async def send_dod():
+    # день, месяц, год и время отправки опроса
+    scheduled_time = datetime(2024, 4, 13, 9, 0, 0)
+
+    # ожидание до момента отправки опроса
+    while datetime.now() < scheduled_time:
+        await asyncio.sleep(60)  # проверка каждую минуту
+    
+    # получение списка всех пользователей
+    users = await get_all_users()
+    file_pdf = 'Программа Дня открытых дверей.pdf'
+    file = types.FSInputFile(file_pdf)
+    for user_id in users:
+        await bot.send_document(chat_id=user_id,
+                                caption="Привет 🕊\n\nСегодня проходит день открытых дверей. Посмотри программу мероприятий, чтобы не пропустить ничего интересного, а также используй команду /restart для обновления бота и просмотра новых функций. \n\nВстречаемся в 11:00 на Большой Семеновской, 38",
+                                document=file)
 
 
 # отправка опроса в определенный день и время
@@ -52,6 +72,11 @@ async def send_poll():
                                     type = 'regular',
                                     allows_multiple_answers = False)
 
+# Получение полного списка пользователей за весь период времени 
+async def get_all_users():
+    cursor.execute('SELECT DISTINCT user_id FROM user_stat')
+    users = [row[0] for row in cursor.fetchall()]
+    return users
 
 # Функция для получения списка пользователей, воспользовавшихся командой старт в заданный период
 async def get_users_in_period(start_time, end_time):
@@ -60,6 +85,5 @@ async def get_users_in_period(start_time, end_time):
     return users
 
 # Запуск бота
-
 if __name__ == "__main__":
     asyncio.run(main())
